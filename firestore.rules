@@ -1,0 +1,73 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Standard Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid is string && (data.uid == userId) &&
+               data.email is string && data.email.size() <= 200 &&
+               (!data.keys().hasAll(['createdAt']) || data.createdAt == request.time) &&
+               (!data.keys().hasAll(['lastSeen']) || data.lastSeen == request.time);
+      }
+      
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        // Action: Update Last Seen or Profile
+        (incoming().diff(existing()).affectedKeys().hasOnly(['lastSeen', 'uid', 'email', 'createdAt'])) ||
+        // Action: Admin update (we don't check hasOnly here to allow isPremium etc)
+        (incoming().diff(existing()).affectedKeys().hasAny(['isPremium', 'premiumUntil']))
+      );
+
+      // Chats Subcollection
+      match /chats/{chatId} {
+        function isValidChat(data) {
+          return data.title is string && data.title.size() <= 100 &&
+                 (!data.keys().hasAll(['isPrivate']) || data.isPrivate is bool) &&
+                 (!data.keys().hasAll(['updatedAt']) || data.updatedAt == request.time);
+        }
+        
+        allow read, write: if isOwner(userId);
+        allow update: if isOwner(userId) && isValidChat(incoming());
+        
+        // Messages Subcollection
+        match /messages/{messageId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+    }
+
+    // Premium Requests
+    match /premium_requests/{requestId} {
+      function isValidPremiumRequest(data) {
+        return data.userId == request.auth.uid &&
+               data.status == 'pending' &&
+               data.createdAt == request.time &&
+               data.email is string &&
+               (!data.keys().hasAll(['transactionId']) || data.transactionId is string) &&
+               (!data.keys().hasAll(['type']) || data.type is string);
+      }
+      
+      allow create: if isSignedIn() && isValidPremiumRequest(incoming());
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+    
+    // Transactions - Server side only, but adding rules for visibility if needed
+    match /transactions/{txId} {
+      allow read: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}

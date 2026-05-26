@@ -1,11 +1,34 @@
-<div align="center">
+# Chat with AI - Local Setup Guide
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+This project is a full-stack AI application using React, Vite, Express, and Firebase.
 
-  <h1>Built with AI Studio</h2>
+## How to run in VS Code
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+2. **Configure Environment Variables**
+   Create a file named `.env` in the root folder and add:
+   ```env
+   GEMINI_API_KEY=your_key_here
+   STRIPE_SECRET_KEY=your_key_here
+   ```
 
-</div>
+3. **Run the Live Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Features
+- **Mobile First**: Full-screen experience on mobile devices.
+- **Ultra Premium**: Enhanced AI capabilities with high-fidelity reasoning.
+- **Secure**: Authentication via Google/Firebase.
+- **Persistent**: Chat history saved securely.
+
+## Scripts
+- `npm run dev`: Starts the development server with Hot Module Replacement.
+- `npm run build`: Builds the app for production.
+- `npm run start`: Starts the production server.

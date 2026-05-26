@@ -1,0 +1,12 @@
+{
+  "name": "Chat with AI",
+  "description": "A sophisticated AI chat application with authentication, internet access, and advanced reasoning.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
